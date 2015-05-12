@@ -1,0 +1,132 @@
+def intro():
+    print 'showing intro'
+
+    raw_input('waiting for button press')
+    return 'button_press'
+
+
+def menu():
+    print 'your menu: '
+    print '* view movie'
+    print '* view extras'
+
+    val = raw_input('select movie or extras')
+
+    if val == 'movie':
+        return 'select_movie'
+    elif val == 'extras':
+        return 'select_extras'
+
+    return 'timeout'
+
+
+def movie():
+    print 'showing movie'
+    import time
+    for i in range(4):
+        time.sleep(500)
+        print '.'
+
+    return 'movie_finished'
+
+
+def extras():
+    print 'showing extras'
+    import time
+    for i in range(8):
+        time.sleep(100)
+        print '.',
+
+    return 'extras_finished'
+
+
+# transition definitions
+trans = {
+    'intro': {
+        'button_press': 'menu',
+    },
+    'menu': {
+        'select_movie': 'movie',
+        'select_extras': 'extras',
+        'timeout': 'intro',
+    },
+    'movie': {
+        'movie_finished': 'menu'
+    },
+    'extras': {
+        'extras_finished': 'menu',
+    }
+
+}
+
+
+class StateMachine(object):
+    def __init__(self):
+        self.state_funcs = {}
+        self.transitions = {}
+        self._starting_state = None
+
+    def add_transition(self, state, input, next_state):
+        trans = self.transitions.setdefault(state, {})
+        trans[input] = next_state
+
+    def add_transition_map(self, map):
+        for state, transitions in map.items():
+            trans = self.transitions.setdefault(state, {})
+            trans.update(transitions)
+
+    def iter_transitions(self):
+        for state, transitions in self.transitions.iteritems():
+            for input, next_state in transitions.iteritems():
+                yield state, input, next_state
+
+    def iter_names(self):
+        states = set()
+        states.update(self.state_funcs.keys())
+        states.update(self.transitions.keys())
+        if self._starting_state is not None:
+            states.add(self._starting_state)
+        return iter(states)
+
+    def set_start(self, name):
+        self._starting_state = name
+
+
+import pygraphviz as pgv
+
+
+def render_graphviz(sm):
+    def add_node(g, name, *args, **kwargs):
+        g.add_node(name, *args, **kwargs)
+        return g.get_node(name)
+
+    g = pgv.AGraph(strict=False, directed=True, rankdir='LR')
+
+    # draw state-nodes
+    for name in sm.iter_names():
+        s_node = add_node(g, name)
+
+        # missing state functions are red
+        if name not in sm.state_funcs:
+            s_node.attr['color'] = 'red'
+            s_node.attr['fontcolor'] = 'red'
+
+    # mark starting state, if any
+    if sm._starting_state is not None:
+        # create invisible node for starting state
+        ivs_start = add_node(g, '__I0', style='invis', shape='none',
+                             width=0, height=0, label='')
+        g.add_edge(ivs_start, sm._starting_state, rank='same')
+
+    # draw transitions
+    for state, input, next_state in sm.iter_transitions():
+        g.add_edge(state, next_state, label=input, fontsize=8)
+
+    return g
+
+
+sm = StateMachine()
+sm.set_start('intro')
+sm.add_transition_map(trans)
+
+render_graphviz(sm).write('output.dot')
