@@ -2,6 +2,10 @@ from twentyfive import StateMachine
 from twentyfive.render import render_graphviz
 
 
+def debug(msg):
+    print 'TRACE: {}'.format(msg)
+
+
 sm = StateMachine()
 
 
@@ -14,7 +18,7 @@ def intro():
 
 
 @sm.state(trans={
-    'select_move': 'movie',
+    'select_movie': 'movie',
     'select_extras': 'extras',
     'timeout': 'intro',
 })
@@ -23,7 +27,7 @@ def menu():
     print '* view movie'
     print '* view extras'
 
-    val = raw_input('select movie or extras')
+    val = raw_input('select movie or extras: ')
 
     if val == 'movie':
         return 'select_movie'
@@ -39,7 +43,8 @@ def movie():
     import time
     for i in range(4):
         time.sleep(500)
-        print '.'
+        print '.',
+    print
 
     return 'movie_finished'
 
@@ -49,10 +54,13 @@ def extras():
     print 'showing extras'
     import time
     for i in range(8):
-        time.sleep(100)
+        time.sleep(0.1)
         print '.',
+    print
 
     return 'extras_finished'
 
 
 render_graphviz(sm).write('output.dot')
+
+sm.run(trace=debug)
