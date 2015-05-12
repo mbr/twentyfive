@@ -108,9 +108,15 @@ def render_graphviz(sm):
         s_node = add_node(g, name)
 
         # missing state functions are red
-        if name not in sm.state_funcs:
+        s_func = sm.state_funcs.get(name, None)
+        if not s_func:
             s_node.attr['color'] = 'red'
             s_node.attr['fontcolor'] = 'red'
+        elif name != s_func.__name__:
+            s_node.attr['label'] = (
+                '<{}<BR /><FONT POINT-SIZE="10">func: {}</FONT>>'.format(
+                    name, s_func.__name__)
+            )
 
     # mark starting state, if any
     if sm._starting_state is not None:
