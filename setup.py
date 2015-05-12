@@ -11,7 +11,7 @@ def read(fname):
 
 
 setup(
-    name='twentyfive',  # -to-life
+    name='twentyfive',
     version='0.1dev',
     description='State machine suitable for long-running systems',
     long_description=read('README.rst'),
