@@ -1,43 +1,5 @@
-class StateMachine(object):
-    def __init__(self):
-        self.state_funcs = {}
-        self.transitions = {}
-        self._starting_state = None
-
-    def add_transition(self, state, input, next_state):
-        trans = self.transitions.setdefault(state, {})
-        trans[input] = next_state
-
-    def iter_transitions(self):
-        for state, transitions in self.transitions.iteritems():
-            for input, next_state in transitions.iteritems():
-                yield state, input, next_state
-
-    def iter_names(self):
-        states = set()
-        states.update(self.state_funcs.keys())
-        states.update(self.transitions.keys())
-        if self._starting_state is not None:
-            states.add(self._starting_state)
-        return iter(states)
-
-    def state(self, trans={}, name=None, start=False):
-        def decorator(f):
-            state_name = name if name is not None else f.__name__
-            self.state_funcs[state_name] = f
-
-            for input, next_state in trans.iteritems():
-                self.add_transition(state_name, input, next_state)
-
-            if start:
-                self.set_start(state_name)
-
-            f._state_name = state_name
-            return f
-        return decorator
-
-    def set_start(self, name):
-        self._starting_state = name
+from twentyfive import StateMachine
+from twentyfive.render import render_graphviz
 
 
 sm = StateMachine()
@@ -91,45 +53,6 @@ def extras():
         print '.',
 
     return 'extras_finished'
-
-
-import pygraphviz as pgv
-
-
-def render_graphviz(sm):
-    def add_node(g, name, *args, **kwargs):
-        g.add_node(name, *args, **kwargs)
-        return g.get_node(name)
-
-    g = pgv.AGraph(strict=False, directed=True, rankdir='LR')
-
-    # draw state-nodes
-    for name in sm.iter_names():
-        s_node = add_node(g, name)
-
-        # missing state functions are red
-        s_func = sm.state_funcs.get(name, None)
-        if not s_func:
-            s_node.attr['color'] = 'red'
-            s_node.attr['fontcolor'] = 'red'
-        elif name != s_func.__name__:
-            s_node.attr['label'] = (
-                '<{}<BR /><FONT POINT-SIZE="10">func: {}</FONT>>'.format(
-                    name, s_func.__name__)
-            )
-
-    # mark starting state, if any
-    if sm._starting_state is not None:
-        # create invisible node for starting state
-        ivs_start = add_node(g, '__I0', style='invis', shape='none',
-                             width=0, height=0, label='')
-        g.add_edge(ivs_start, sm._starting_state, rank='same')
-
-    # draw transitions
-    for state, input, next_state in sm.iter_transitions():
-        g.add_edge(state, next_state, label=input, fontsize=8)
-
-    return g
 
 
 render_graphviz(sm).write('output.dot')
