@@ -1,3 +1,49 @@
+class StateMachine(object):
+    def __init__(self):
+        self.state_funcs = {}
+        self.transitions = {}
+        self._starting_state = None
+
+    def add_transition(self, state, input, next_state):
+        trans = self.transitions.setdefault(state, {})
+        trans[input] = next_state
+
+    def iter_transitions(self):
+        for state, transitions in self.transitions.iteritems():
+            for input, next_state in transitions.iteritems():
+                yield state, input, next_state
+
+    def iter_names(self):
+        states = set()
+        states.update(self.state_funcs.keys())
+        states.update(self.transitions.keys())
+        if self._starting_state is not None:
+            states.add(self._starting_state)
+        return iter(states)
+
+    def state(self, trans={}, name=None, start=False):
+        def decorator(f):
+            state_name = name if name is not None else f.__name__
+            self.state_funcs[state_name] = f
+
+            for input, next_state in trans.iteritems():
+                self.add_transition(state_name, input, next_state)
+
+            if start:
+                self.set_start(state_name)
+
+            f._state_name = state_name
+            return f
+        return decorator
+
+    def set_start(self, name):
+        self._starting_state = name
+
+
+sm = StateMachine()
+
+
+@sm.state({'button_press': 'menu'}, start=True)
 def intro():
     print 'showing intro'
 
@@ -5,6 +51,11 @@ def intro():
     return 'button_press'
 
 
+@sm.state(trans={
+    'select_move': 'movie',
+    'select_extras': 'extras',
+    'timeout': 'intro',
+})
 def menu():
     print 'your menu: '
     print '* view movie'
@@ -20,6 +71,7 @@ def menu():
     return 'timeout'
 
 
+@sm.state({'movie_finished': 'menu'})
 def movie():
     print 'showing movie'
     import time
@@ -30,6 +82,7 @@ def movie():
     return 'movie_finished'
 
 
+@sm.state({'extras_finished': 'menu'})
 def extras():
     print 'showing extras'
     import time
@@ -38,58 +91,6 @@ def extras():
         print '.',
 
     return 'extras_finished'
-
-
-# transition definitions
-trans = {
-    'intro': {
-        'button_press': 'menu',
-    },
-    'menu': {
-        'select_movie': 'movie',
-        'select_extras': 'extras',
-        'timeout': 'intro',
-    },
-    'movie': {
-        'movie_finished': 'menu'
-    },
-    'extras': {
-        'extras_finished': 'menu',
-    }
-
-}
-
-
-class StateMachine(object):
-    def __init__(self):
-        self.state_funcs = {}
-        self.transitions = {}
-        self._starting_state = None
-
-    def add_transition(self, state, input, next_state):
-        trans = self.transitions.setdefault(state, {})
-        trans[input] = next_state
-
-    def add_transition_map(self, map):
-        for state, transitions in map.items():
-            trans = self.transitions.setdefault(state, {})
-            trans.update(transitions)
-
-    def iter_transitions(self):
-        for state, transitions in self.transitions.iteritems():
-            for input, next_state in transitions.iteritems():
-                yield state, input, next_state
-
-    def iter_names(self):
-        states = set()
-        states.update(self.state_funcs.keys())
-        states.update(self.transitions.keys())
-        if self._starting_state is not None:
-            states.add(self._starting_state)
-        return iter(states)
-
-    def set_start(self, name):
-        self._starting_state = name
 
 
 import pygraphviz as pgv
@@ -124,9 +125,5 @@ def render_graphviz(sm):
 
     return g
 
-
-sm = StateMachine()
-sm.set_start('intro')
-sm.add_transition_map(trans)
 
 render_graphviz(sm).write('output.dot')
