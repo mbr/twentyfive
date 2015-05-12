@@ -38,3 +38,24 @@ class StateMachine(object):
 
     def set_start(self, name):
         self._starting_state = name
+
+    def run(self, start_state=None, trace=None):
+        state = start_state or self._starting_state
+
+        if not state:
+            raise ValueError('No starting state set.')
+
+        # FIXME: allow for exit states
+        while True:
+            state_func = self.state_funcs[state]
+
+            if trace:
+                trace('enter {}'.format(state))
+
+            output = state_func()
+
+            if trace:
+                trace('exit {}: {}'.format(state, output))
+
+            # look up transition
+            state = self.transitions[state][output]
