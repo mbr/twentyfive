@@ -67,7 +67,8 @@ def error():
     return 'restart'
 
 
-render_graphviz(sm).write('output.dot')
-history = sm.run_trace()
+if __name__ == '__main__':
+    render_graphviz(sm).write('output.dot')
+    history = sm.run_trace()
 
-print ' -> '.join('{} [{}]'.format(node, edge) for node, edge in history), '.'
+    print ' -> '.join('{} [{}]'.format(node, edge) for node, edge in history), '.'
