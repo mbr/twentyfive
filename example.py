@@ -68,4 +68,6 @@ def error():
 
 
 render_graphviz(sm).write('output.dot')
-sm.run_trace()
+history = sm.run_trace()
+
+print ' -> '.join('{} [{}]'.format(node, edge) for node, edge in history), '.'
