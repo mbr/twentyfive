@@ -5,24 +5,16 @@ digraph {
   node [shape = circle];
   qi -> start;
   start [label="load start state"];
-  {
-    rank=same;
-    exec [label="execute current state"];
-    end [label="check if state is valid end state"];
-  }
-  {
-    rank=same;
-    transition [label="transition to next state"];
-    halt [shape=doublecircle];
-  }
-  start -> transition [label="not found/state:error,input:missing_state"];
+  exec [label="execute current state\n(yield to caller)"];
+  transition [label="transition to next state"];
+  halt [shape=doublecircle];
+  start -> transition [label="not found/state:error,input:missing_state_function"];
   start -> exec [label="found/state:starting_state"];
   exec -> transition [label="returned not-None/input:return value"];
-  exec -> transition [label="except/input:unhandled_exception"];
-  exec -> end [label="returned None"];
-  end -> halt [label="is valid halting state"];
-  end -> transition [label="invalid halt/state:error,input:not_valid_end_state"];
+  exec -> transition [label="except/input:err:unhandled_exception"];
+  transition -> halt [label="state is None, halt allowed"];
+  transition -> transition [label="state is None, invalid halt/input:err:invalid_end_state"];
   transition -> exec [label="valid transition/state:delta(state, input)"];
-  transition -> transition [label="missing state_func/state:error,input:missing_state_func"];
-  transition -> transition [label="missing delta/state:error,input:missing_transition"];
+  transition -> transition [label="missing state_func/state:error,input:missing_state_function"];
+  transition -> transition [label="missing delta/input:err:invalid_input"];
 }
