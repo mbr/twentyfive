@@ -35,6 +35,7 @@ class StateMachine(object):
             if start:
                 self.start_state = state_name
 
+            self.final_states.discard(state_name)
             if final:
                 self.final_states.add(state_name)
 
