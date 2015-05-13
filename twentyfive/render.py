@@ -1,3 +1,4 @@
+from cgi import escape
 import pygraphviz as pgv
 
 
@@ -20,7 +21,7 @@ def render_graphviz(sm):
         elif name != s_func.__name__:
             s_node.attr['label'] = (
                 '<{}<BR /><FONT POINT-SIZE="10">func: {}</FONT>>'.format(
-                    name, s_func.__name__)
+                    escape(name), escape(s_func.__name__))
             )
 
     # mark starting state, if any
