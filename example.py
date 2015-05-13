@@ -68,4 +68,4 @@ def error():
 
 
 render_graphviz(sm).write('output.dot')
-sm.run()
+sm.run_trace()
