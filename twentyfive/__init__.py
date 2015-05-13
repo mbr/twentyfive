@@ -81,5 +81,8 @@ class StateMachine(object):
             # outer while repeats
 
     def run(self, start_state=None):
+        all(self.create_runner(start_state))
+
+    def run_trace(self, start_state=None):
         for state, input in self.create_runner(start_state):
             print 'TRACE -- transitioned from state', state, 'with', input
