@@ -2,10 +2,6 @@ from twentyfive import StateMachine
 from twentyfive.render import render_graphviz
 
 
-def debug(msg):
-    print 'TRACE: {}'.format(msg)
-
-
 sm = StateMachine()
 
 
