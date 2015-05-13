@@ -24,6 +24,9 @@ def render_graphviz(sm):
                     escape(name), escape(s_func.__name__))
             )
 
+        if name in sm.final_states:
+            s_node.attr['shape'] = 'doublecircle'
+
     # mark starting state, if any
     if sm.start_state is not None:
         # create invisible node for starting state
