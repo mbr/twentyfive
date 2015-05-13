@@ -18,8 +18,13 @@ class StateMachine(object):
 
     def iter_names(self):
         states = set()
+
         states.update(self.state_funcs.keys())
         states.update(self.transitions.keys())
+
+        for state, transitions in self.transitions.iteritems():
+            states.update(transitions.values())
+
         if self.start_state is not None:
             states.add(self.start_state)
         return iter(states)
