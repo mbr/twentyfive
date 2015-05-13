@@ -17,7 +17,7 @@ def intro():
     return 'button_press'
 
 
-@sm.state(trans={
+@sm.state(final=True, trans={
     'select_movie': 'movie',
     'select_extras': 'extras',
     'timeout': 'intro',
@@ -35,6 +35,8 @@ def menu():
         return 'select_extras'
     elif val == 'e':
         return 'non_existant_state'
+    elif val == 'q':
+        return None
 
     return 'timeout'
 
@@ -63,6 +65,11 @@ def extras():
     return 'extras_finished'
 
 
-render_graphviz(sm).write('output.dot')
+@sm.state({'restart': 'intro'})
+def error():
+    print 'reached error state'
+    return 'restart'
 
+
+render_graphviz(sm).write('output.dot')
 sm.run()
