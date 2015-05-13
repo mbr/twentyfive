@@ -3,13 +3,9 @@ class StateMachine(object):
         self.state_funcs = {}
         self.transitions = {}
         self.final_states = set(['error'])
-        self._starting_state = None
+        self.start_state = None
 
         self.state_funcs['error'] = lambda: None
-
-    def _missing_state_transition():
-        print 'missing state transition'
-        return
 
     def add_transition(self, state, input, next_state):
         trans = self.transitions.setdefault(state, {})
@@ -28,7 +24,7 @@ class StateMachine(object):
             states.add(self._starting_state)
         return iter(states)
 
-    def state(self, trans={}, name=None, start=False):
+    def state(self, trans={}, name=None, start=False, final=False):
         def decorator(f):
             state_name = name if name is not None else f.__name__
             self.state_funcs[state_name] = f
@@ -37,14 +33,14 @@ class StateMachine(object):
                 self.add_transition(state_name, input, next_state)
 
             if start:
-                self.set_start(state_name)
+                self.start_state = state_name
+
+            if final:
+                self.final_states.add(state_name)
 
             f._state_name = state_name
             return f
         return decorator
-
-    def set_start(self, name):
-        self._starting_state = name
 
     def create_runner(self, start_state=None):
         # S: load start state
