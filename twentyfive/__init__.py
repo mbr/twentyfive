@@ -4,6 +4,16 @@ class StateMachine(object):
         self.transitions = {}
         self._starting_state = None
 
+        self.state_funcs['__error'] = self._error
+
+    def _error(input):
+        print 'RAN INTO ERROR', input
+        raise RuntimeError('Ended in Error State')
+
+    def _missing_state_transition():
+        print 'missing state transition'
+        return
+
     def add_transition(self, state, input, next_state):
         trans = self.transitions.setdefault(state, {})
         trans[input] = next_state
@@ -41,21 +51,40 @@ class StateMachine(object):
 
     def run(self, start_state=None, trace=None):
         state = start_state or self._starting_state
+        output = None
 
         if not state:
             raise ValueError('No starting state set.')
 
         # FIXME: allow for exit states
         while True:
-            state_func = self.state_funcs[state]
+            print 'output', output, 'state', state
+            # transition state if output is set
+            if output is not None:
+                ts = self.transitions.get(state, {})
+                next_state = ts.get(state, None)
 
+                if not next_state:
+                    state = '__error'
+                    output = 'missing_transition'
+                    continue
+
+                state = next_state
+
+            # retrieve state function
+            state_func = self.state_funcs.get(state, None)
+            print 'state_func', state_func
+
+            if not state_func:
+                state = '__error'
+                output = 'missing_state_function'
+                continue
+
+            # at this point we have a valid state function
             if trace:
                 trace('enter {}'.format(state))
 
-            output = state_func()
+            output = state_func(output)
 
             if trace:
                 trace('exit {}: {}'.format(state, output))
-
-            # look up transition
-            state = self.transitions[state][output]

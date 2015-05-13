@@ -10,7 +10,7 @@ sm = StateMachine()
 
 
 @sm.state({'button_press': 'menu'}, start=True)
-def intro():
+def intro(input):
     print 'showing intro'
 
     raw_input('waiting for button press')
@@ -22,7 +22,7 @@ def intro():
     'select_extras': 'extras',
     'timeout': 'intro',
 })
-def menu():
+def menu(input):
     print 'your menu: '
     print '* view movie'
     print '* view extras'
@@ -33,12 +33,14 @@ def menu():
         return 'select_movie'
     elif val == 'extras':
         return 'select_extras'
+    elif val == 'e':
+        return 'non_existant_state'
 
     return 'timeout'
 
 
 @sm.state({'movie_finished': 'menu'})
-def movie():
+def movie(input):
     print 'showing movie'
     import time
     for i in range(4):
@@ -50,7 +52,7 @@ def movie():
 
 
 @sm.state({'extras_finished': 'menu'})
-def extras():
+def extras(input):
     print 'showing extras'
     import time
     for i in range(8):
