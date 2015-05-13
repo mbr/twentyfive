@@ -52,9 +52,9 @@ class StateMachine(object):
             # S: execute current state
             try:
                 # state is guaranteed to exist
-                input = yield state, self.state_funcs[state]
-                yield
-            except Exception:  # T: except
+                input = self.state_funcs[state]()
+                yield state, input
+            except BaseException:  # T: except
                 input = 'err:unhandled_exception'
 
             # S: validate input
@@ -80,10 +80,5 @@ class StateMachine(object):
             # outer while repeats
 
     def run(self, start_state=None):
-        machine = self.create_runner(start_state)
-
-        for state, state_func in machine:
-            print 'TRACE -- running state', state, 'with statefunc', state_func
-            result = state_func()
-            print 'TRACE -- result:', result
-            machine.send(result)
+        for state, input in self.create_runner(start_state):
+            print 'TRACE -- transitioned from state', state, 'with', input
