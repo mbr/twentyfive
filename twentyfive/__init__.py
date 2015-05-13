@@ -1,14 +1,19 @@
+from .util import coroutine
+
+
+def _error():
+    print 'RAN INTO ERROR'
+    return 'unhandled_error'
+
+
 class StateMachine(object):
     def __init__(self):
         self.state_funcs = {}
         self.transitions = {}
         self._starting_state = None
 
-        self.state_funcs['__error'] = self._error
-
-    def _error(input):
-        print 'RAN INTO ERROR', input
-        raise RuntimeError('Ended in Error State')
+        self.state_funcs['_error'] = _error
+        self.add_transition('_error', 'missing_transition', '_error')
 
     def _missing_state_transition():
         print 'missing state transition'
@@ -49,42 +54,60 @@ class StateMachine(object):
     def set_start(self, name):
         self._starting_state = name
 
-    def run(self, start_state=None, trace=None):
+    def create_runner(self, start_state=None):
+        # S: load starting state
         state = start_state or self._starting_state
-        output = None
 
+        # T: not found
         if not state:
-            raise ValueError('No starting state set.')
+            state = '_error'
+            input = 'missing_start_function'
+            skip_execution = True  # almost tempted to ask for a goto
+        else:
+            skip_execution = False  # T: found
 
-        # FIXME: allow for exit states
         while True:
-            print 'output', output, 'state', state
-            # transition state if output is set
-            if output is not None:
-                ts = self.transitions.get(state, {})
-                next_state = ts.get(state, None)
+            if not skip_execution:
+                # S: Execute/Yield
+                try:
+                    # retrieve state function
+                    input = yield state, self.state_funcs[state]
+                    yield
+                except Exception as e:  # T: exc
+                    # S: turn exc into transition
+                    pass  # FIXME: Missing
+                else:
+                    if input is None:  # T: None
+                        # S: check current state is valid end state
+                        pass  # FIXME: Missing
 
-                if not next_state:
-                    state = '__error'
-                    output = 'missing_transition'
+                # T: state input
+            else:
+                skip_execution = False  # skip only once
+
+            # S: transition
+            while True:
+                state = self.transitions.get(state, {}).get(input, None)
+
+                if state is None:  # T: missing transition
+                    input = 'missing_transition'
+                    state = '_error'
                     continue
 
-                state = next_state
+                if not state in self.state_funcs:
+                    input = 'missing_state_function'
+                    state = '_error'
+                    continue
 
-            # retrieve state function
-            state_func = self.state_funcs.get(state, None)
-            print 'state_func', state_func
+                break  # T: state and state func found
 
-            if not state_func:
-                state = '__error'
-                output = 'missing_state_function'
-                continue
+            # proceed to execution state at this point
 
-            # at this point we have a valid state function
-            if trace:
-                trace('enter {}'.format(state))
+    def run(self, start_state=None):
+        machine = self.create_runner(start_state)
 
-            output = state_func(output)
-
-            if trace:
-                trace('exit {}: {}'.format(state, output))
+        for state, state_func in machine:
+            print 'TRACE -- running state', state, 'with statefunc', state_func
+            result = state_func()
+            print 'TRACE -- result:', result
+            machine.send(result)
