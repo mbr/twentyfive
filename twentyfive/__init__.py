@@ -20,8 +20,8 @@ class StateMachine(object):
         states = set()
         states.update(self.state_funcs.keys())
         states.update(self.transitions.keys())
-        if self._starting_state is not None:
-            states.add(self._starting_state)
+        if self.start_state is not None:
+            states.add(self.start_state)
         return iter(states)
 
     def state(self, trans={}, name=None, start=False, final=False):
@@ -44,7 +44,7 @@ class StateMachine(object):
 
     def create_runner(self, start_state=None):
         # S: load start state
-        state = start_state or self._starting_state
+        state = start_state or self.start_state
         if state is None or not state in self.state_funcs:  # T: not found
             state = 'error'
 

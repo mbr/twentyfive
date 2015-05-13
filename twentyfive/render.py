@@ -25,11 +25,11 @@ def render_graphviz(sm):
             )
 
     # mark starting state, if any
-    if sm._starting_state is not None:
+    if sm.start_state is not None:
         # create invisible node for starting state
         ivs_start = add_node(g, '__I0', style='invis', shape='none',
                              width=0, height=0, label='')
-        g.add_edge(ivs_start, sm._starting_state, rank='same')
+        g.add_edge(ivs_start, sm.start_state, rank='same')
 
     # draw transitions
     for state, input, next_state in sm.iter_transitions():
