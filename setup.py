@@ -21,4 +21,12 @@ setup(
     license='MIT',
     packages=find_packages(exclude=['tests']),
     install_requires=[],
+    extras_require={
+        'tools': ['click', 'pygraphviz'],
+    },
+    entry_points={
+        'console_scripts': [
+            'sm25 = twentyfive.cli:cli [tools]',
+        ]
+    }
 )
