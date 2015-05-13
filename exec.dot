@@ -14,7 +14,7 @@ digraph {
   exec -> input [label="return/input:return value"];
   exec -> input [label="except/input:err:unhandled_exception"];
   input -> halt [label="input is None, halt allowed"];
-  input -> transition [label="input is None, invalid halt/input:err:invalid_end_state"];
+  input -> transition [label="input is None, invalid halt/input:err:invalid_final_state"];
   input -> transition [label="input is not None"];
   transition -> transition [label="missing state_func/state:delta(state, input),input:err:missing_state_function"];
   transition -> exec [label="valid transition/state:delta(state, input)"];

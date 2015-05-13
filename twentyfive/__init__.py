@@ -1,19 +1,11 @@
-from .util import coroutine
-
-
-def _error():
-    print 'RAN INTO ERROR'
-    return 'unhandled_error'
-
-
 class StateMachine(object):
     def __init__(self):
         self.state_funcs = {}
         self.transitions = {}
+        self.final_states = set(['error'])
         self._starting_state = None
 
-        self.state_funcs['_error'] = _error
-        self.add_transition('_error', 'missing_transition', '_error')
+        self.state_funcs['error'] = lambda: None
 
     def _missing_state_transition():
         print 'missing state transition'
@@ -55,53 +47,41 @@ class StateMachine(object):
         self._starting_state = name
 
     def create_runner(self, start_state=None):
-        # S: load starting state
+        # S: load start state
         state = start_state or self._starting_state
-
-        # T: not found
-        if not state:
-            state = '_error'
-            input = 'missing_start_function'
-            skip_execution = True  # almost tempted to ask for a goto
-        else:
-            skip_execution = False  # T: found
+        if state is None or not state in self.state_funcs:  # T: not found
+            state = 'error'
 
         while True:
-            if not skip_execution:
-                # S: Execute/Yield
-                try:
-                    # retrieve state function
-                    input = yield state, self.state_funcs[state]
-                    yield
-                except Exception as e:  # T: exc
-                    # S: turn exc into transition
-                    pass  # FIXME: Missing
-                else:
-                    if input is None:  # T: None
-                        # S: check current state is valid end state
-                        pass  # FIXME: Missing
+            # S: execute current state
+            try:
+                # state is guaranteed to exist
+                input = yield state, self.state_funcs[state]
+                yield
+            except Exception:  # T: except
+                input = 'err:unhandled_exception'
 
-                # T: state input
-            else:
-                skip_execution = False  # skip only once
+            # S: validate input
+            if input is None:
+                if state in self.final_states:
+                    break  # T: halt
+                input = 'err:invalid_final_state'
 
             # S: transition
             while True:
                 state = self.transitions.get(state, {}).get(input, None)
 
-                if state is None:  # T: missing transition
-                    input = 'missing_transition'
-                    state = '_error'
-                    continue
+                if state is None:  # T: missing delta
+                    state = 'error'
+                    break
 
                 if not state in self.state_funcs:
-                    input = 'missing_state_function'
-                    state = '_error'
+                    input = 'err:missing_state_function'
                     continue
 
                 break  # T: state and state func found
 
-            # proceed to execution state at this point
+            # outer while repeats
 
     def run(self, start_state=None):
         machine = self.create_runner(start_state)
