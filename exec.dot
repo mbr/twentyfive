@@ -7,14 +7,16 @@ digraph {
   start [label="load start state"];
   exec [label="execute current state\n(yield to caller)"];
   transition [label="transition to next state"];
+  input [label="validate input"];
   halt [shape=doublecircle];
   start -> transition [label="not found/state:error"];
   start -> exec [label="found/state:starting_state"];
-  exec -> transition [label="return/input:return value"];
-  exec -> transition [label="except/input:err:unhandled_exception"];
-  transition -> halt [label="input is None, halt allowed"];
-  transition -> transition [label="input is None, invalid halt/input:err:invalid_end_state"];
-  transition -> exec [label="valid transition/state:delta(state, input)"];
+  exec -> input [label="return/input:return value"];
+  exec -> input [label="except/input:err:unhandled_exception"];
+  input -> halt [label="input is None, halt allowed"];
+  input -> input [label="input is None, invalid halt/input:err:invalid_end_state"];
+  input -> transition [label="input is not None"];
   transition -> transition [label="missing state_func/input:err:missing_state_function"];
+  transition -> exec [label="valid transition/state:delta(state, input)"];
   transition -> transition [label="missing delta/state:error"];
 }
