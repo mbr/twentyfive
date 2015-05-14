@@ -91,7 +91,13 @@ class StateMachine(object):
             # outer while repeats
 
     def run(self, start_state=None):
-        all(self.create_runner(start_state))
+        runner = self.create_runner(start_state)
+
+        while True:
+            state, output = runner
+
+            if output is None:
+                return state
 
     def run_trace(self, start_state=None, log_func=print, hist_len=256):
         history = deque(maxlen=hist_len)
