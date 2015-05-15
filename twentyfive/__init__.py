@@ -64,7 +64,6 @@ class StateMachine(object):
             try:
                 # state is guaranteed to exist
                 input = self.state_funcs[state]()
-                yield state, input
             except BaseException:  # T: except
                 input = 'err:unhandled_exception'
 
@@ -75,6 +74,7 @@ class StateMachine(object):
                 input = 'err:invalid_final_state'
 
             # S: transition
+            yield state, input
             while True:
                 state = self.transitions.get(state, {}).get(input, None)
 
