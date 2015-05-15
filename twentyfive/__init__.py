@@ -59,10 +59,12 @@ class StateMachine(object):
         if state is None or not state in self.state_funcs:  # T: not found
             state = 'error'
 
+        input = '_start'
         while True:
             # S: execute current state
             try:
                 # state is guaranteed to exist
+                yield state, input
                 input = self.state_funcs[state]()
             except BaseException:  # T: except
                 input = 'err:unhandled_exception'
@@ -74,7 +76,6 @@ class StateMachine(object):
                 input = 'err:invalid_final_state'
 
             # S: transition
-            yield state, input
             while True:
                 state = self.transitions.get(state, {}).get(input, None)
 
