@@ -59,12 +59,15 @@ class StateMachine(object):
         if state is None or not state in self.state_funcs:  # T: not found
             state = 'error'
 
-        input = '_start'
+        prev_state = None
+        input = None
+
         while True:
             # S: execute current state
             try:
                 # state is guaranteed to exist
-                yield state, input
+                yield prev_state, input, state
+                prev_state = state
                 input = self.state_funcs[state]()
             except BaseException:  # T: except
                 input = 'err:unhandled_exception'
@@ -72,6 +75,7 @@ class StateMachine(object):
             # S: validate input
             if input is None:
                 if state in self.final_states:
+                    yield prev_state, input, None
                     break  # T: halt
                 input = 'err:invalid_final_state'
 
@@ -95,21 +99,25 @@ class StateMachine(object):
         runner = self.create_runner(start_state)
 
         while True:
-            state, output = runner
+            prev_state, output, state = runner
 
-            if output is None:
-                return state
+            if state is None:
+                return prev_state
 
     def run_trace(self, start_state=None, log_func=print, hist_len=256):
         history = deque(maxlen=hist_len)
 
-        for state, output in self.create_runner(start_state):
-            history.append((state, output))
+        for prev_state, output, state in self.create_runner(start_state):
+            history.append((prev_state, output, state))
             if log_func:
-                if output is None:
-                    log_func('state: (halt)')
+                if prev_state is None:
+                    log_func('state: {}'.format(state))
+                elif state is None:
+                    log_func('state: {} -> (halt)'.format(prev_state))
                     break
                 else:
-                    log_func('state: {} [{}] ->'.format(state, output))
+                    log_func('state: {} [{}] -> {}'.format(
+                        prev_state, output, state)
+                    )
 
         return history
