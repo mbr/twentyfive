@@ -107,6 +107,7 @@ class StateMachine(object):
             if log_func:
                 if output is None:
                     log_func('state: (halt)')
+                    break
                 else:
                     log_func('state: {} [{}] ->'.format(state, output))
 
