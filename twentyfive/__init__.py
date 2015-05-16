@@ -53,7 +53,7 @@ class StateMachine(object):
             return f
         return decorator
 
-    def create_runner(self, start_state=None):
+    def create_runner(self, start_state=None, reraise=False):
         # S: load start state
         state = start_state or self.start_state
         if state is None or not state in self.state_funcs:  # T: not found
@@ -69,8 +69,11 @@ class StateMachine(object):
                 yield prev_state, input, state
                 prev_state = state
                 input = self.state_funcs[state]()
-            except BaseException:  # T: except
+            except BaseException as e:  # T: except
+                if reraise:
+                    raise
                 input = 'err:unhandled_exception'
+                print('UNHANDLED EXCEPTION', e)
 
             # S: validate input
             if input is None:
@@ -95,8 +98,8 @@ class StateMachine(object):
 
             # outer while repeats
 
-    def run(self, start_state=None):
-        runner = self.create_runner(start_state)
+    def run(self, start_state=None, reraise=False):
+        runner = self.create_runner(start_state, reraise=reraise)
 
         while True:
             prev_state, output, state = runner
@@ -104,10 +107,12 @@ class StateMachine(object):
             if state is None:
                 return prev_state
 
-    def run_trace(self, start_state=None, log_func=print, hist_len=256):
+    def run_trace(self, start_state=None, log_func=print, hist_len=256,
+                  reraise=False):
         history = deque(maxlen=hist_len)
 
-        for prev_state, output, state in self.create_runner(start_state):
+        runner = self.create_runner(start_state, reraise=reraise)
+        for prev_state, output, state in runner:
             history.append((prev_state, output, state))
             if log_func:
                 if prev_state is None:
