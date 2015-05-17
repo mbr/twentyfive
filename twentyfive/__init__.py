@@ -73,7 +73,6 @@ class StateMachine(object):
                 if reraise:
                     raise
                 input = 'err:unhandled_exception'
-                print('UNHANDLED EXCEPTION', e)
 
             # S: validate input
             if input is None:
