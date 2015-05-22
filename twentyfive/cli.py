@@ -1,4 +1,5 @@
 from importlib import import_module
+import sys
 
 import click
 
@@ -22,6 +23,7 @@ def print_(import_name, output, layout):
 
     mod_name, obj_name = import_name.rsplit('.', 1)
 
+    sys.path.append('.')  # allow import of modules in current path
     mod = import_module(mod_name)
     sm = getattr(mod, obj_name)
 
