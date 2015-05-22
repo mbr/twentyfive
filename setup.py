@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name='twentyfive',
-    version='0.2.dev1',
+    version='0.2',
     description='State machine suitable for long-running systems',
     long_description=read('README.rst'),
     author='Marc Brinkmann',
